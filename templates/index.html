@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Number Predictor - Smart Guessing Game</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🤖</span>
+                <h1>Predicta<span class="highlight">AI</span></h1>
+            </div>
+            <p class="subtitle">The ultimate mind-reading machine</p>
+        </header>
+
+        <!-- MAIN APP CARD -->
+        <main class="glass-card">
+            <!-- VIEW 1: START SCREEN -->
+            <section id="view-start" class="view active">
+                <div class="intro-graphics">
+                    <div class="floating-brain">🧠</div>
+                    <div class="number-pulse">?</div>
+                </div>
+                <h2>Think of a Number!</h2>
+                <p class="instruction-text">
+                    Choose a whole number between <strong class="color-accent">1</strong> and <strong class="color-accent">100</strong> in your mind. 
+                    Once you've locked it in, the AI will try to guess it in 7 attempts or fewer.
+                </p>
+                <div class="action-wrapper">
+                    <button id="btn-start" class="btn btn-primary btn-glow">
+                        <span>I'm Ready, Start!</span>
+                        <svg class="icon-arrow" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M16.172 11l-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- VIEW 2: GAME SCREEN -->
+            <section id="view-game" class="view">
+                <div class="status-badge">Attempt <span id="lbl-attempt-curr">1</span></div>
+                
+                <div class="guess-display-wrapper">
+                    <span class="guess-sub">Is your number...</span>
+                    <div id="lbl-current-guess" class="guess-number">50</div>
+                </div>
+
+                <!-- Visual search range bar -->
+                <div class="range-container">
+                    <div class="range-labels">
+                        <span id="lbl-range-min" class="range-boundary">1</span>
+                        <span class="range-info">Possible range</span>
+                        <span id="lbl-range-max" class="range-boundary">100</span>
+                    </div>
+                    <div class="range-track">
+                        <div id="range-fill" class="range-fill" style="left: 0%; right: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="controls-grid">
+                    <button id="btn-lower" class="btn btn-secondary hint-btn" data-hint="lower">
+                        <span class="btn-icon">⬇️</span>
+                        <span class="btn-label">Too High</span>
+                        <span class="btn-subtext">Secret is lower</span>
+                    </button>
+                    
+                    <button id="btn-correct" class="btn btn-success hint-btn" data-hint="correct">
+                        <span class="btn-icon">🎉</span>
+                        <span class="btn-label">Correct!</span>
+                        <span class="btn-subtext">Match found</span>
+                    </button>
+                    
+                    <button id="btn-higher" class="btn btn-secondary hint-btn" data-hint="higher">
+                        <span class="btn-icon">⬆️</span>
+                        <span class="btn-label">Too Low</span>
+                        <span class="btn-subtext">Secret is higher</span>
+                    </button>
+                </div>
+
+                <!-- History / AI Stats Panel -->
+                <div class="history-panel">
+                    <h3>Guess Logs</h3>
+                    <div id="history-list" class="history-list">
+                        <!-- History items will be inserted here dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 3: SUCCESS SCREEN -->
+            <section id="view-success" class="view">
+                <div class="success-icon-wrapper">
+                    <div class="success-emoji">🎯</div>
+                    <div class="sparkles">✨</div>
+                </div>
+                <h2>Aha! Got it!</h2>
+                <p class="success-message">
+                    The AI successfully guessed your number <strong id="lbl-final-number" class="color-accent">50</strong> in 
+                    <strong id="lbl-total-attempts" class="color-accent">X</strong> attempts!
+                </p>
+
+                <div class="stat-summary-card">
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-attempts">X</span>
+                        <span class="stat-label">Guesses</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">100%</span>
+                        <span class="stat-label">Accuracy</span>
+                    </div>
+                </div>
+
+                <div class="action-wrapper">
+                    <button id="btn-restart-success" class="btn btn-primary btn-glow">
+                        <span>Play Again</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- VIEW 4: CHEAT / CONTRADICTION ALERT SCREEN -->
+            <section id="view-cheat" class="view">
+                <div class="warning-icon-wrapper">
+                    <span class="warning-emoji">🤨</span>
+                </div>
+                <h2>Contradiction Detected!</h2>
+                <p class="instruction-text">
+                    Wait a second... it's mathematically impossible for your number to exist based on your answers! 
+                    You indicated the number is:
+                </p>
+                <div class="contradiction-details">
+                    <p>Higher than: <strong id="lbl-cheat-higher" class="color-accent">X</strong></p>
+                    <p>Lower than: <strong id="lbl-cheat-lower" class="color-accent">Y</strong></p>
+                </div>
+                <p class="cheat-warning-sub">
+                    Please make sure your responses are accurate next time! Let's restart.
+                </p>
+                <div class="action-wrapper">
+                    <button id="btn-restart-cheat" class="btn btn-danger btn-glow">
+                        <span>Restart Game</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <p>Powered by Python Backend & Binary Search Algorithm</p>
+        </footer>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
